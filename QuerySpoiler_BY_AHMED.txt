@@ -1,0 +1,184 @@
+1.
+SELECT
+	pembelian_bahan_baku.nama_bahan, karyawan.Nama
+    	FROM pembelian_bahan_baku
+        	INNER JOIN karyawan
+            	ON pembelian_bahan_baku.id_karyawan = karyawan.Id;
+
+2.
+SELECT
+	supplier.nama 'Nama Supplier',
+    CONCAT('Rp.', SUM(pembelian_bahan_baku.jumlah*pembelian_bahan_baku.harga_satuan)) 'Total Penghasilan'
+    	FROM pembelian_bahan_baku
+        	INNER JOIN supplier
+            	ON pembelian_bahan_baku.id_supplier = supplier.id
+GROUP BY supplier.nama;
+
+3.
+SELECT
+DISTINCT
+	karyawan.Nama,
+    COUNT(pembelian_bahan_baku.id_karyawan) 'Jumlah Baris'
+    	FROM karyawan
+        	INNER JOIN pembelian_bahan_baku
+            	ON karyawan.Id = pembelian_bahan_baku.id_karyawan
+GROUP BY karyawan.Id
+ORDER BY karyawan.Nama
+LIMIT 100;
+
+4.
+SELECT
+	karyawan.Nama,
+    COUNT(menu_harian.id) 'Jumlah Baris'
+		FROM karyawan
+        	INNER JOIN menu_harian
+            	ON karyawan.Id = menu_harian.id_koki
+WHERE menu_harian.nama_menu = 'Bebek Goreng Mentega'
+GROUP by karyawan.Nama
+ORDER BY karyawan.Nama
+LIMIT 100;
+
+5.
+SELECT
+	menu.nama 'Nama Menu',
+        kategori.nama 'Kategori',
+        menu_harian.tanggal
+		FROM menu
+        	INNER JOIN menu_harian
+            	ON menu.nama = menu_harian.nama_menu
+            INNER JOIN kategori
+            	ON menu.id_kategori = kategori.id
+WHERE DATE_FORMAT(menu_harian.tanggal, '%M %Y') = 'July 2016'
+LIMIT 100;
+
+6.
+SELECT
+	menu_harian.nama_menu 'Menu',
+    karyawan.Nama 'Koki',
+    bahan_baku.nama 'Bahan Baku'
+    	FROM menu_harian
+        	INNER JOIN koki
+            	ON menu_harian.id_koki = koki.id
+            INNER JOIN karyawan
+            	ON koki.id = karyawan.Id
+            INNER JOIN menu
+            	ON menu_harian.nama_menu = menu.nama
+            INNER JOIN bahan_baku_menu
+            	ON menu.nama = bahan_baku_menu.nama_menu
+            INNER JOIN bahan_baku
+            	ON menu.nama = menu_harian.nama_menu
+WHERE bahan_baku.nama = 'AIR' AND karyawan.Nama = 'Hermione Ferguson';
+
+7.
+SELECT
+    menu.nama,
+    COUNT(bahan_baku_menu.nama_menu)
+FROM
+    bahan_baku_menu
+INNER JOIN bahan_baku ON bahan_baku_menu.nama_bahan = bahan_baku.nama
+INNER JOIN menu ON bahan_baku_menu.nama_menu = menu.nama
+GROUP BY
+    bahan_baku_menu.nama_menu
+HAVING
+    COUNT(bahan_baku_menu.nama_menu) = 3;
+
+8.
+SELECT Nama,TglLahir,No_KTP,Posisi FROM karyawan WHERE karyawan.No_KTP LIKE '9%';
+
+9.
+SELECT
+    supplier.nama 'Supplier',
+    COUNT(
+        pembelian_bahan_baku.id_supplier
+    ) 'Jumlah Baris'
+FROM
+    supplier
+INNER JOIN pembelian_bahan_baku ON supplier.id = pembelian_bahan_baku.id_supplier
+GROUP BY
+    pembelian_bahan_baku.id_supplier
+HAVING
+    COUNT(
+        pembelian_bahan_baku.id_supplier
+    ) = 1;
+
+10.
+SELECT
+DISTINCT
+    supplier.nama,
+    supplier.email
+FROM
+    supplier
+INNER JOIN pembelian_bahan_baku ON supplier.id = pembelian_bahan_baku.id_supplier
+WHERE
+    supplier.email = '' AND pembelian_bahan_baku.nama_bahan = 'Telur' OR supplier.email = '' AND pembelian_bahan_baku.nama_bahan = 'Tepung';
+
+11.
+
+SELECT
+    bbm.nama_menu 'Menu',
+    SUM(
+        DISTINCT pbb.harga_satuan
+    ) 'Total Biaya'
+FROM
+    bahan_baku_menu bbm
+LEFT JOIN bahan_baku bb ON
+    bbm.nama_bahan = bb.nama
+INNER JOIN pembelian_bahan_baku pbb ON
+    bbm.nama_bahan = pbb.nama_bahan
+WHERE
+    bbm.nama_menu = 'bubur ayam';
+
+12.
+SELECT
+    SUM(pbb.jumlah * pbb.harga_satuan) 'Total Harga Terbesar',
+    pbb.nota,
+    pbb.nama_bahan,
+    sp.nama
+FROM pembelian_bahan_baku pbb
+    INNER JOIN supplier sp ON pbb.id_supplier = sp.id
+GROUP BY pbb.nota
+HAVING
+    SUM(pbb.jumlah * pbb.harga_satuan) = (
+        SELECT MAX(lwsum)
+        FROM (
+                SELECT
+                    SUM(pmb.jumlah * pmb.harga_satuan) lwsum
+                FROM
+                    pembelian_bahan_baku pmb
+                GROUP BY
+                    pmb.nota
+            ) sq
+    );
+
+13.
+SELECT
+    mh.tanggal,
+    mh.id_koki,
+    k.`Nama`,
+    COUNT(mh.id_koki)
+from menu_harian mh
+    INNER JOIN karyawan k ON mh.id_koki = k.Id
+GROUP BY
+    mh.tanggal,
+    mh.id_koki
+HAVING COUNT(mh.id_koki) > 1;
+
+14.
+SELECT
+    k.nama,
+    COUNT(mn.id_kategori) 'Jumlah Menu'
+from menu mn
+    INNER JOIN kategori k ON mn.id_kategori = k.id
+GROUP BY k.nama;
+
+15.
+SELECT
+    DISTINCT sp.nama,
+    sp.email,
+    COUNT(pbb.id_supplier) 'Jumlah Pembelian'
+FROM supplier sp
+    INNER JOIN pembelian_bahan_baku pbb ON sp.id = pbb.id_supplier
+WHERE sp.email = ''
+GROUP BY sp.nama
+HAVING
+    COUNT(pbb.id_supplier) = 1;
